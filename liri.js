@@ -15,6 +15,7 @@ var space = " ";
 var spotifySong = "";
 var request = require("request");
 var movieTitle = "";
+var fs = require("fs");
 
 // Objects that store keys for the APIs
 var twitterGet = new Twitter({
@@ -30,28 +31,33 @@ var spotifyGet = new Spotify({
 });
 
 // Switch statement used to determine the code to run
-switch (command) {
 
-	case "my-tweets":
-	twitter();
-	break;
+function processCommand(command) {
+	switch (command) {
 
-	case "spotify-this-song":
-	spotify();
-	break;
+		case "my-tweets":
+		twitter();
+		break;
 
-	case "movie-this":
-	movieThis();
-	break;
+		case "spotify-this-song":
+		spotify();
+		break;
 
-	case "do-what-it-says":
-	whatItSays();
-	break;
+		case "movie-this":
+		movieThis();
+		break;
 
-	default:
-	console.log("Please enter a command.");
+		case "do-what-it-says":
+		whatItSays();
+		break;
 
-};
+		default:
+		console.log("Please enter a command.");
+
+	};
+}
+
+processCommand(command);
 
 // Function for Twitter
 function twitter () {
@@ -100,14 +106,7 @@ spotifyGet.search({ type: 'track', query: spotifySong}, function(err, data) {
 		return console.log('Error occurred: ' + err);
 	}
 
-	for (var i = 0; i < data.tracks.items.length; i++) {
-		console.log("-------------------------------------------------------------------");
-		console.log("Artist: " + data.tracks.items[i].artists[0].name);
-		console.log("Song Title: " + data.tracks.items[i].name);
-		console.log("Album: " + data.tracks.items[i].album.name);
-		console.log("Preview URL: " + data.tracks.items[i].preview_url);
-
-	}
+	displaySongInfo(data.tracks.items);
 
 
 });
@@ -130,7 +129,7 @@ if (!process.argv[3]) {
 
 		if (!error && response.statusCode === 200) {
 
-				body = JSON.parse(body);
+			body = JSON.parse(body);
 
 			displayMovie(body);
 
@@ -157,7 +156,7 @@ request(queryUrl, function(error, response, body) {
 
 	if (!error && response.statusCode === 200) {
 
-			body = JSON.parse(body);
+		body = JSON.parse(body);
 
 		displayMovie(body);
 
@@ -183,8 +182,10 @@ function displayMovie (body) {
 
 }
 
+// Function that displays all music info
+
 function displaySongInfo (songs) {
-		for (var i = 0; i < songs.length; i++) {
+	for (var i = 0; i < songs.length; i++) {
 		console.log("-------------------------------------------------------------------");
 		console.log("Artist: " + songs[i].artists[0].name);
 		console.log("Song Title: " + songs[i].name);
@@ -196,5 +197,28 @@ function displaySongInfo (songs) {
 
 // Function for "Do What It Says"
 function whatItSays () {
+
+// Reads the file
+
+fs.readFile("random.txt", "utf8", function(error, data) {
+
+  if (error) {
+    return console.log(error);
+  }
+
+  // Makes the file workable
+
+  var dataArr = data.split(",");
+
+// Takes the two items in the array and assigns them to the appropriate process.argv
+
+process.argv[2] = dataArr[0];
+process.argv[3] = dataArr[1];
+
+// Runs the switch statement using the info from the file
+
+processCommand(dataArr[0]);
+
+});
 
 }
